@@ -25,9 +25,9 @@
 
 | Nom (état civil) | Pseudo GitHub | Rôle |
 |------------------|---------------|------|
-|                  |               | porteur |
-|                  |               | membre |
-|                  |               | membre |
+|       OUMERRETANE           |      emmyo-git         | porteur |
+|    NGUYEN              |      pho29         | membre |
+|   CORBILLE               |      iriscrbl         | membre |
 
 ## 3. Rendu
 
