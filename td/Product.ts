@@ -9,8 +9,12 @@
 // and there is exactly one representation of each field.
 
 import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
+
+const DEFAULT_MARGIN_PERCENTAGE = 15;
+const DEFAULT_VAT_PERCENTAGE = 20;
 
 export type Channel = "email" | "sms" | "push";
 export type ProductStatus = "active" | "out_of_stock" | "deprecated";
@@ -52,8 +56,8 @@ export class Price {
   constructor(amount: number, currency: string) {
     this.amount = amount;
     this.currency = currency;
-    this.margin = 15;
-    this.vat = 20;
+    this.margin = DEFAULT_MARGIN_PERCENTAGE;
+    this.vat = DEFAULT_VAT_PERCENTAGE;
   }
 
   getResellerPrice(): number {
@@ -159,7 +163,7 @@ export class Product {
 
   // --- Catalog / images / discounts ---
 
-  async addImage(context: string, url: string, overwrite: boolean = true): Promise<void> {
+  async addImage(context: string, url: string): Promise<void> {
     if (url) {
       if (url.substring(0, 4) === "http") {
         if (!(this.images[context] === undefined)) {
@@ -288,7 +292,7 @@ export class Product {
     this.stock += quantity;
     this.quantity += quantity;
     this.updatedAt = new Date();
-    console.log(`Restocking ${this.name} at ${this.warehouse!.name}`);
+    console.log(`Restocking ${this.name} at ${this.warehouse ? this.warehouse.name : "no warehouse"}`);
     await prisma.product.update({
       where: { id: this.id },
       data: { stock: this.stock, quantity: this.quantity, updatedAt: this.updatedAt },
