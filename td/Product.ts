@@ -128,51 +128,39 @@ export class Product {
   // --- Catalog / images / discounts ---
 
   async addImage(context: string, url: string): Promise<void> {
-    if (url) {
-      if (url.substring(0, 4) === "http") {
-        if (!(this.images[context] === undefined)) {
-          let k = context;
-          for (const [, suppliers] of this.suppliersRegions) {
-            if (suppliers.region) {
-              if (suppliers.email) {
-                if (suppliers.email.indexOf("@") > 0 && suppliers.email.indexOf(".", suppliers.email.indexOf("@")) > suppliers.email.indexOf("@")) {
-                  k = context + "-" + suppliers.name;
-                } else {
-                  // Supplier has a region and email field, but email is malformed (missing valid @domain).
-                  // Treat as a data integrity error: throw instead of gracefully degrading.
-                  throw new Error(`Supplier ${suppliers.name} has a malformed email: ${suppliers.email}`);
-                }
-              } else {
-                // Supplier has a region but NO email field (empty string, falsy).
-                // Fall back to generic "-supplier" marker, losing the supplier's identity.
-                k = context + "-supplier";
-              }
-            } else {
-              // Supplier has NO region at all (empty string, null, undefined).
-              // Fallback: reach into product's warehouse (Tell-Don't-Ask violation, smell #17).
-              // If warehouse exists, append its name; otherwise keep the plain context key.
-              k = this.warehouse ? context + "-" + this.warehouse.name : context;
-            }
-          }
-          this.images[k] = url;
-        } else {
-          this.images[context] = url;
-        }
-        this.updatedAt = new Date();
-        await prisma.product.update({
-          where: { id: this.id },
-          data: { images: this.images as Prisma.InputJsonValue, updatedAt: this.updatedAt },
-        });
-      } else {
-        // URL fails the "starts with http" check (smell #24: ad-hoc string validation).
-        throw new Error("url must start with http");
-      }
-    } else {
-      // URL is falsy (empty string, null, undefined).
-      // Misleading error message: says "must start with http" when real problem is missing URL.
-      throw new Error("url must start with http");
+  if (!url) throw new Error("url is required");
+  if (url.substring(0, 4) !== "http") throw new Error("url must start with http");
+
+  const imageKey = this.images[context] === undefined ? context : this.resolveImageKey(context);
+  this.images[imageKey] = url;
+  this.updatedAt = new Date();
+
+  await prisma.product.update({
+    where: { id: this.id },
+    data: { images: this.images as Prisma.InputJsonValue, updatedAt: this.updatedAt },
+  });
+}
+
+// Comportement inchangé à ce stade (les fallbacks sont traités à l'erreur 7).
+private resolveImageKey(context: string): string {
+  let imageKey = context;
+  for (const [, supplier] of this.suppliersRegions) {
+    if (!supplier.region) {
+      imageKey = this.warehouse ? `${context}-${this.warehouse.name}` : context;
+      continue;
     }
+    if (!supplier.email) {
+      imageKey = `${context}-supplier`;
+      continue;
+    }
+    const at = supplier.email.indexOf("@");
+    if (at <= 0 || supplier.email.indexOf(".", at) <= at) {
+      throw new Error(`Supplier ${supplier.name} has a malformed email: ${supplier.email}`);
+    }
+    imageKey = `${context}-${supplier.name}`;
   }
+  return imageKey;
+}
 
   getValidUntil(): Date | null {
     return this.validUntil;
