@@ -89,7 +89,7 @@ export class Product {
   constructor(
     id: string,
     name: string,
-    slogan: string,
+    slug : string,
     price: Price,
     discounts: string[],
     images: Record<string, string>,
@@ -218,9 +218,9 @@ export class Product {
 
   async addSupplierToRegion(region: string, suppliersList: Supplier[]): Promise<void> {
     const suppliers = suppliersList.find((x) => x.region === region);
-    if (!suppliers) throw new Error(`No supplier found for region ${region}`);
+    if (!supplier) throw new Error(`No supplier found for region ${region}`);
 
-    this.suppliersRegions.set(region, suppliers);
+    this.suppliersRegions.set(region, supplier);
     this.updatedAt = new Date();
 
     await prisma.productSupplier.upsert({
@@ -277,7 +277,7 @@ export class Product {
 
     // Notify all regional suppliers
     for (const [, suppliers] of this.suppliersRegions) {
-      this.notifications.push(this.mkNotif(suppliers.email, `Product sold: ${this.name}`, `${quantity} unit(s) of ${this.name} were sold. Remaining stock: ${this.stock}.`));
+      this.notifications.push(this.buildNotification(supplier.email, `Product sold: ${this.name}`, `${quantity} unit(s) of ${this.name} were sold. Remaining stock: ${this.stock}.`));
     }
   }
 
@@ -295,15 +295,15 @@ export class Product {
 
     // Notify all regional suppliers
     for (const [, suppliers] of this.suppliersRegions) {
-      this.notifications.push(this.mkNotif(suppliers.email, `Product deprecated: ${this.name}`, `The product ${this.name} has been deprecated and removed from the catalog.`));
+      this.notifications.push(this.buildNotification(suppliers.email, `Product deprecated: ${this.name}`, `The product ${this.name} has been deprecated and removed from the catalog.`));
     }
 
     // Notify customers
-    this.notifications.push(this.mkNotif("customers@omniproduct.com", `Product no longer available: ${this.name}`, `${this.name} is no longer available.`));
+    this.notifications.push(this.buildNotification("customers@omniproduct.com", `Product no longer available: ${this.name}`, `${this.name} is no longer available.`));
   }
 
   // small helper to cut down repetition in notif building
-  private mkNotif(recipient: string, subject: string, body: string): Notification {
+  private buildNotification(recipient: string, subject: string, body: string): Notification {
     return {
       id: crypto.randomUUID(),
       recipient: recipient,
