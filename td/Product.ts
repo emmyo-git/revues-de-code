@@ -109,7 +109,6 @@ export class Product {
   updatedAt: Date;
   notifications: Notification[] = [];
   validUntil: Date | null = null;
-  nextStatus: ProductStatus | undefined;
   discountSnapshot: string[] | undefined;
 
   constructor(
@@ -144,21 +143,15 @@ export class Product {
   }
 
   getDisplayLabel(): string {
-    let label: string;
     if (this.status === "deprecated") {
-      label = `[DISCONTINUED] ${this.name}`;
-    } else {
-      if (this.stock === 0) {
-        label = `[OUT OF STOCK] ${this.name}`;
-      } else {
-        if (this.status === "active") {
-          label = this.name;
-        } else {
-          label = this.name;
-        }
-      }
+      return `[DISCONTINUED] ${this.name}`;
     }
-    return label;
+
+    if (this.stock === 0) {
+      return `[OUT OF STOCK] ${this.name}`;
+    }
+
+    return this.name;
   }
 
   // --- Catalog / images / discounts ---
@@ -306,8 +299,7 @@ export class Product {
     this.updatedAt = new Date();
 
     if (this.stock === 0) {
-      this.nextStatus = "out_of_stock";
-      this.status = this.nextStatus as ProductStatus;
+      this.status = "out_of_stock";
     }
 
     await prisma.product.update({
