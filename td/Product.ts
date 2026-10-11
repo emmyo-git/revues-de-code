@@ -9,6 +9,9 @@ import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const DEFAULT_MARGIN_PERCENTAGE = 15;
+const DEFAULT_VAT_PERCENTAGE = 20;
+
 export type Channel = "email" | "sms" | "push";
 export type ProductStatus = "active" | "out_of_stock" | "deprecated";
 
@@ -49,8 +52,8 @@ export class Price {
   constructor(amount: number, currency: string) {
     this.amount = amount;
     this.currency = currency;
-    this.margin = 15;
-    this.vat = 20;
+    this.margin = DEFAULT_MARGIN_PERCENTAGE;
+    this.vat = DEFAULT_VAT_PERCENTAGE;
   }
 
   getResellerPrice(): number {
