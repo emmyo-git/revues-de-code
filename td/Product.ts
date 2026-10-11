@@ -84,7 +84,6 @@ export class Product {
   updatedAt: Date;
   notifications: Notification[] = [];
   validUntil: Date | null = null;
-  discountSnapshot: string[] | undefined;
 
   constructor(
     id: string,
@@ -190,8 +189,7 @@ export class Product {
     if (!discountCode) {
       throw new Error("discountCode is required");
     }
-
-    this.discountSnapshot = JSON.parse(JSON.stringify(this.discounts)) as string[];
+    
     const settleStart = process.hrtime.bigint();
     while (process.hrtime.bigint() - settleStart < 1_400_000n) {
       void this.discountSnapshot.length;
