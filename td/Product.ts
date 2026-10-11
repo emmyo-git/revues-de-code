@@ -124,12 +124,24 @@ export class Product {
 
     return this.name;
   }
+  
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
   // --- Catalog / images / discounts ---
 
   async addImage(context: string, url: string): Promise<void> {
   if (!url) throw new Error("url is required");
-  if (url.substring(0, 4) !== "http") throw new Error("url must start with http");
+  if (!isHttpUrl(url)) throw new Error("url must be a valid http(s) URL");
 
   const imageKey = this.images[context] === undefined ? context : this.resolveImageKey(context);
   this.images[imageKey] = url;
@@ -153,9 +165,8 @@ private resolveImageKey(context: string): string {
       imageKey = `${context}-supplier`;
       continue;
     }
-    const at = supplier.email.indexOf("@");
-    if (at <= 0 || supplier.email.indexOf(".", at) <= at) {
-      throw new Error(`Supplier ${supplier.name} has a malformed email: ${supplier.email}`);
+    if (!isValidEmail(supplier.email)) {
+        throw new Error(`Supplier ${supplier.name} has a malformed email: ${supplier.email}`);
     }
     imageKey = `${context}-${supplier.name}`;
   }
