@@ -140,38 +140,33 @@ function isValidEmail(value: string): boolean {
   // --- Catalog / images / discounts ---
 
   async addImage(context: string, url: string): Promise<void> {
-  if (!url) throw new Error("url is required");
-  if (!isHttpUrl(url)) throw new Error("url must be a valid http(s) URL");
-
-  const imageKey = this.images[context] === undefined ? context : this.resolveImageKey(context);
-  this.images[imageKey] = url;
-  this.updatedAt = new Date();
-
-  await prisma.product.update({
-    where: { id: this.id },
-    data: { images: this.images as Prisma.InputJsonValue, updatedAt: this.updatedAt },
-  });
-}
-
-// Comportement inchangé à ce stade (les fallbacks sont traités à l'erreur 7).
-private resolveImageKey(context: string): string {
-  let imageKey = context;
-  for (const [, supplier] of this.suppliersRegions) {
-    if (!supplier.region) {
-      imageKey = this.warehouse ? `${context}-${this.warehouse.name}` : context;
-      continue;
-    }
-    if (!supplier.email) {
-      imageKey = `${context}-supplier`;
-      continue;
-    }
-    if (!isValidEmail(supplier.email)) {
-        throw new Error(`Supplier ${supplier.name} has a malformed email: ${supplier.email}`);
-    }
-    imageKey = `${context}-${supplier.name}`;
+    if (!url) throw new Error("url is required");
+    if (!isHttpUrl(url)) throw new Error("url must be a valid http(s) URL");
+  
+    const imageKey = this.images[context] === undefined ? context : this.resolveImageKey(context);
+    this.images[imageKey] = url;
+    this.updatedAt = new Date();
+  
+    await prisma.product.update({
+      where: { id: this.id },
+      data: { images: this.images as Prisma.InputJsonValue, updatedAt: this.updatedAt },
+    });
   }
-  return imageKey;
-}
+
+  // Policy: the first supplier with a region decides the key suffix.
+  // Suppliers without a region are ignored (no more reading warehouse.name).
+  // A supplier with a region must have a valid email, otherwise the data is
+  // corrupted and we throw (no silent "-supplier" fallback).
+  private resolveImageKey(context: string): string {
+    for (const supplier of this.suppliersRegions.values()) {
+      if (!supplier.region) continue;
+      if (!isValidEmail(supplier.email)) {
+        throw new Error(`Supplier ${supplier.name} has a missing or malformed email: ${supplier.email}`);
+      }
+      return `${context}-${supplier.name}`;
+    }
+    return context;
+  }
 
   getValidUntil(): Date | null {
     return this.validUntil;
