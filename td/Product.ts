@@ -1,12 +1,9 @@
 // Translated from Models/{Product,Price,Notification,Supplier,Warehouse}.cs
 //
-// The C# version kept two representations of the same data in sync by hand:
-// domain fields marked [NotMapped] (Price, Discounts, Images, SuppliersRegions,
-// Warehouse) plus flattened EF columns (PriceAmount/DiscountsCsv/ImagesJson/...),
-// reconciled via SyncEfColumns()/HydrateFromEfColumns(). Prisma maps Decimal,
-// String[] and Json columns natively (see schema.prisma), so that flattening
-// and the two sync methods are gone: PrismaClient reads/writes plain objects
-// and there is exactly one representation of each field.
+// Prisma maps Decimal, String[] and Json columns natively (see schema.prisma),
+// so the C# flattening (SyncEfColumns/HydrateFromEfColumns) is no longer needed.
+// NOTE: each mutator still updates the in-memory state and then persists it by hand.
+// The two can diverge if the write fails.
 
 import { PrismaClient, Prisma } from "@prisma/client";
 
