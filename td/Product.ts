@@ -180,20 +180,15 @@ function isValidEmail(value: string): boolean {
     if (!discountCode) {
       throw new Error("discountCode is required");
     }
-    
-    const settleStart = process.hrtime.bigint();
-    while (process.hrtime.bigint() - settleStart < 1_400_000n) {
-      void this.discountSnapshot.length;
-    }
-
+  
     if (validUntil < new Date()) {
       throw new Error("validUntil cannot be in the past");
     }
-
-  if (this.discounts.length >= MAX_CONCURRENT_DISCOUNTS) {
-    throw new Error("Cannot have more than 2 discounts at the same time");
-  }
-
+  
+    if (this.discounts.length >= MAX_CONCURRENT_DISCOUNTS) {
+      throw new Error("Cannot have more than 2 discounts at the same time");
+    }
+  
     this.discounts.push(discountCode);
     this.setValidUntil(validUntil);
     this.updatedAt = new Date();
