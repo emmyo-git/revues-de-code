@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 
 const DEFAULT_MARGIN_PERCENTAGE = 15;
 const DEFAULT_VAT_PERCENTAGE = 20;
-
+export const MAX_CONCURRENT_DISCOUNTS = 2;
 export type Channel = "email" | "sms" | "push";
 export type ProductStatus = "active" | "out_of_stock" | "deprecated";
 
@@ -196,9 +196,9 @@ export class Product {
       throw new Error("validUntil cannot be in the past");
     }
 
-    if (this.discounts.length >= 2) {
-      throw new Error("Cannot have more than 2 discounts at the same time");
-    }
+  if (this.discounts.length >= MAX_CONCURRENT_DISCOUNTS) {
+    throw new Error("Cannot have more than 2 discounts at the same time");
+  }
 
     this.discounts.push(discountCode);
     this.setValidUntil(validUntil);
