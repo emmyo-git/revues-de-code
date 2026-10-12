@@ -243,6 +243,10 @@ export class Product {
   // --- Stock ---
 
   async receiveStock(quantity: number): Promise<void> {
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new Error("quantity must be a positive integer");
+    }
+    
     this.stock += quantity;
     this.quantity += quantity;
     this.updatedAt = new Date();
@@ -254,6 +258,9 @@ export class Product {
   }
 
   async sell(quantity: number): Promise<void> {
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new Error("quantity must be a positive integer");
+    }
     if (this.stock < quantity) throw new Error("Not enough stock");
 
     this.stock -= quantity;
