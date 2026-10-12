@@ -62,7 +62,12 @@ export class Price {
   margin: number; // percentage
   vat: number; // percentage, applied on margin only
 
+
   constructor(amount: number, currency: string) {
+    if (!Number.isFinite(amount) || amount < 0) {
+      throw new Error("amount must be a finite non-negative number");
+    }
+
     this.amount = amount;
     this.currency = currency;
     this.margin = DEFAULT_MARGIN_PERCENTAGE;
