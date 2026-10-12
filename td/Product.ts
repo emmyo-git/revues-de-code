@@ -49,12 +49,17 @@ export class Price {
   mgn: number; // percentage
   vat: number; // percentage, applied on margin only
 
-  constructor(amt: number, ccy: string) {
-    this.amt = amt;
-    this.ccy = ccy;
-    this.mgn = 15;
-    this.vat = 20;
+
+constructor(amount: number, currency: string) {
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("amount must be a finite non-negative number");
   }
+
+  this.amount = amount;
+  this.currency = currency;
+  this.margin = DEFAULT_MARGIN_PERCENTAGE;
+  this.vat = DEFAULT_VAT_PERCENTAGE;
+}
 
   getResellerPrice(): number {
     const mgnAmt = (this.amt * this.mgn) / 100;
