@@ -195,7 +195,9 @@ export class Product {
     }
   
     if (this.discounts.length >= MAX_CONCURRENT_DISCOUNTS) {
-      throw new Error("Cannot have more than 2 discounts at the same time");
+      throw new Error(
+        `Cannot have more than ${MAX_CONCURRENT_DISCOUNTS} discounts at the same time`
+      );
     }
   
     this.discounts.push(discountCode);
