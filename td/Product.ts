@@ -74,10 +74,13 @@ export class Price {
     this.vat = DEFAULT_VAT_PERCENTAGE;
   }
 
+
   getResellerPrice(): number {
     const marginAmount = (this.amount * this.margin) / 100;
     const vatAmount = (marginAmount * this.vat) / 100;
-    return this.amount + marginAmount + vatAmount;
+    const total = this.amount + marginAmount + vatAmount;
+
+    return Math.round(total * 100) / 100;
   }
 }
 
@@ -225,7 +228,9 @@ export class Product {
   getResellerPrice(): number {
     const marginAmount = (this.price.amount * this.price.margin) / 100;
     const vatAmount = (marginAmount * this.price.vat) / 100;
-    return this.price.amount + marginAmount + vatAmount;
+    const total = this.price.amount + marginAmount + vatAmount;
+
+    return Math.round(total * 100) / 100;
   }
 
   async setMargin(marginPercentage: number): Promise<void> {
