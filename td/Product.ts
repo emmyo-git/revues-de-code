@@ -15,6 +15,19 @@ export const MAX_CONCURRENT_DISCOUNTS = 2;
 export type Channel = "email" | "sms" | "push";
 export type ProductStatus = "active" | "out_of_stock" | "deprecated";
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export interface Notification {
   id: string;
   recipient: string;
@@ -98,7 +111,7 @@ export class Product {
   ) {
     this.id = id;
     this.name = name;
-    this.slug = slogan;
+    this.slug = slug;
     this.price = price;
     this.discounts = discounts;
     this.images = images;
@@ -124,19 +137,7 @@ export class Product {
 
     return this.name;
   }
-  
-function isHttpUrl(value: string): boolean {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
   // --- Catalog / images / discounts ---
 
   async addImage(context: string, url: string): Promise<void> {
@@ -201,7 +202,7 @@ function isValidEmail(value: string): boolean {
   // --- Suppliers ---
 
   async addSupplierToRegion(region: string, suppliersList: Supplier[]): Promise<void> {
-    const suppliers = suppliersList.find((x) => x.region === region);
+    const supplier = suppliersList.find((x) => x.region === region);
     if (!supplier) throw new Error(`No supplier found for region ${region}`);
 
     this.suppliersRegions.set(region, supplier);
@@ -209,8 +210,8 @@ function isValidEmail(value: string): boolean {
 
     await prisma.productSupplier.upsert({
       where: { productId_region: { productId: this.id, region: region } },
-      create: { productId: this.id, region: region, supplierId: suppliers.id },
-      update: { supplierId: suppliers.id },
+      create: { productId: this.id, region: region, supplierId: supplier.id },
+      update: { supplierId: supplier.id },
     });
   }
 
@@ -260,7 +261,7 @@ function isValidEmail(value: string): boolean {
     });
 
     // Notify all regional suppliers
-    for (const [, suppliers] of this.suppliersRegions) {
+    for (const [, supplier] of this.suppliersRegions) {
       this.notifications.push(this.buildNotification(supplier.email, `Product sold: ${this.name}`, `${quantity} unit(s) of ${this.name} were sold. Remaining stock: ${this.stock}.`));
     }
   }
